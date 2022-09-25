@@ -20,18 +20,21 @@ from tqdm import tqdm
 from retinaface.pre_trained_models import get_model
 from preprocess import extract_face
 import warnings
+import cv2
+
+
 warnings.filterwarnings('ignore')
 
 def main(args):
 
     model=Detector()
     model=model.to(device)
-    cnn_sd=torch.load(args.weight_name)["model"]
+    cnn_sd=torch.load(args.weight_name, map_location=device)["model"]
     model.load_state_dict(cnn_sd)
     model.eval()
 
     frame = cv2.imread(args.input_image)
-	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     face_detector = get_model("resnet50_2020-07-20", max_size=max(frame.shape),device=device)
     face_detector.eval()
@@ -56,7 +59,7 @@ if __name__=='__main__':
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-    device = torch.device('cuda')
+    device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
 
     parser=argparse.ArgumentParser()
     parser.add_argument('-w',dest='weight_name',type=str)
