@@ -33,7 +33,7 @@ def main(args):
     model.load_state_dict(cnn_sd)
     model.eval()
 
-    print("load_state_dict done", face_list)
+    print("load_state_dict done")
 
     frame = cv2.imread(args.input_image)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
