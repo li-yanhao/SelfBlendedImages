@@ -21,7 +21,7 @@ RUN pip install dlib imutils scipy pandas opencv-python tqdm pretrainedmodels im
 RUN pip install -U retinaface-pytorch
 RUN pip install gdown
 
-ENV bin /workdir/exec
+ENV bin /workdir/bin
 RUN mkdir -p $bin
 workdir $bin
 
