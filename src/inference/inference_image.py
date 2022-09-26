@@ -33,6 +33,8 @@ def main(args):
     model.load_state_dict(cnn_sd)
     model.eval()
 
+    print("load_state_dict done", face_list)
+
     frame = cv2.imread(args.input_image)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -40,7 +42,7 @@ def main(args):
     face_detector.eval()
 
     face_list=extract_face(frame,face_detector)
-
+    print("face_list", face_list)
     with torch.no_grad():
         img=torch.tensor(face_list).to(device).float()/255
         # torchvision.utils.save_image(img, f'test.png', nrow=8, normalize=False, range=(0, 1))

@@ -15,8 +15,8 @@ cd $bin
 # ls
 # ls ./input/
 
-pwd
-ls
+# pwd
+# ls
 
 python src/inference/inference_image.py -w weights/FFraw.tar -i $exec_root/input_0.png
     # >> $bin/stdout.txt
