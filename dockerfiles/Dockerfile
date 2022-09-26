@@ -23,6 +23,7 @@ RUN pip install gdown
 
 ENV bin /workdir/exec
 RUN mkdir -p $bin
+workdir $bin
 
 
 COPY . .
