@@ -9,9 +9,13 @@ exec_root=`pwd`
 # mkdir -p $bin/input/
 # cp input_0.png $bin/input/
 
-cd $bin
+# cd $bin
+
 # ls
 # ls ./input/
+
+pwd
+ls
 
 python src/inference/inference_image.py -w weights/FFraw.tar -i $exec_root/input_0.png
     # >> $bin/stdout.txt

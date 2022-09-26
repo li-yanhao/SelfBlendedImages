@@ -21,7 +21,7 @@ RUN pip install dlib imutils scipy pandas opencv-python tqdm pretrainedmodels im
 RUN pip install -U retinaface-pytorch
 RUN pip install gdown
 
-ENV bin /workdir/bin/
+ENV bin /workdir/exec
 RUN mkdir -p $bin
 
 
@@ -34,4 +34,4 @@ RUN gdown  -O weights/FFraw.tar 12sLyqBp0VFwdpA-oZLdIOkOTkz_ZnIhV
 # download model weights
 RUN bash test_img.sh
 
-WORKDIR /work/exec
+WORKDIR $bin
