@@ -73,5 +73,6 @@ if __name__=='__main__':
     args=parser.parse_args()
 
     print("Hi python")
+    print("device", device)
     main(args)
 

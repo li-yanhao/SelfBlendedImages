@@ -15,7 +15,6 @@ class Detector(nn.Module):
         self.cel=nn.CrossEntropyLoss()
         self.optimizer=SAM(self.parameters(),torch.optim.SGD,lr=0.001, momentum=0.9)
         
-        
 
     def forward(self,x):
         x=self.net(x)
