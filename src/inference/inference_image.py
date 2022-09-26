@@ -26,7 +26,7 @@ import cv2
 # warnings.filterwarnings('ignore')
 
 def main(args):
-
+    print("main")
     model=Detector()
     print("model")
     model=model.to(device)
