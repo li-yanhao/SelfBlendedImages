@@ -1,4 +1,7 @@
 
+set -e
+
+
 # /workdir/bin
 exec_root=`pwd`
 
