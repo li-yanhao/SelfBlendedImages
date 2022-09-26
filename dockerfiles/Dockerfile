@@ -21,7 +21,8 @@ RUN pip install dlib imutils scipy pandas opencv-python tqdm pretrainedmodels im
 RUN pip install -U retinaface-pytorch
 RUN pip install gdown
 
-ENV bin /workdir/exec
+# this is the path that IPOL is connected to
+ENV bin /workdir/bin
 RUN mkdir -p $bin
 workdir $bin
 
