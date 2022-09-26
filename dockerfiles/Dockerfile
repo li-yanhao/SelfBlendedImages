@@ -28,8 +28,6 @@ RUN mkdir -p $bin
 COPY . .
 
 RUN mkdir -p weights
-RUN gdown 
-
 
 RUN gdown  -O weights/FFraw.tar 12sLyqBp0VFwdpA-oZLdIOkOTkz_ZnIhV
 
