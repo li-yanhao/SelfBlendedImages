@@ -31,7 +31,7 @@ RUN mkdir -p weights
 RUN gdown 
 
 
-RUN gdown 12sLyqBp0VFwdpA-oZLdIOkOTkz_ZnIhV -O weights/FFraw.tar
+RUN gdown  -O weights/FFraw.tar 12sLyqBp0VFwdpA-oZLdIOkOTkz_ZnIhV
 
 # download model weights
 RUN bash test_img.sh

@@ -26,7 +26,7 @@ def main(args):
     model=Detector()
     model=model.to(device)
     cnn_sd=torch.load(args.weight_name, map_location=device)["model"]
-    print(f"device = {device}")
+    # print(f"device = {device}")
     model.load_state_dict(cnn_sd)
     model.eval()
 
