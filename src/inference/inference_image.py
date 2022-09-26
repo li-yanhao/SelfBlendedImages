@@ -50,7 +50,8 @@ def main(args):
 
 
 if __name__=='__main__':
-
+    print("Hi python")
+    
     seed=1
     random.seed(seed)
     torch.manual_seed(seed)
