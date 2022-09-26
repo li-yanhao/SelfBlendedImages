@@ -31,7 +31,9 @@ COPY . .
 
 RUN mkdir -p weights
 
-RUN gdown  -O weights/FFraw.tar 12sLyqBp0VFwdpA-oZLdIOkOTkz_ZnIhV
+RUN gdown 12sLyqBp0VFwdpA-oZLdIOkOTkz_ZnIhV -O weights/FFraw.tar 
+RUN wget https://github.com/lukemelas/EfficientNet-PyTorch/releases/download/1.0/adv-efficientnet-b4-44fb3a87.pth
+RUN mv adv-efficientnet-b4-44fb3a87.pth weights/
 
 # download model weights
 RUN bash test_img.sh

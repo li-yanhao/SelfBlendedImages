@@ -11,7 +11,7 @@ class Detector(nn.Module):
 
     def __init__(self):
         super(Detector, self).__init__()
-        self.net=EfficientNet.from_pretrained("efficientnet-b4",advprop=True,num_classes=2)
+        self.net=EfficientNet.from_pretrained("efficientnet-b4", weights_path="weights/adv-efficientnet-b4-44fb3a87.pth", advprop=True,num_classes=2)
         self.cel=nn.CrossEntropyLoss()
         self.optimizer=SAM(self.parameters(),torch.optim.SGD,lr=0.001, momentum=0.9)
         
