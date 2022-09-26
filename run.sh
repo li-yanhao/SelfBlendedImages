@@ -1,4 +1,5 @@
-# export HOME=/home/ipol
+
+# /workdir/bin
 exec_root=`pwd`
 
 # touch stdout.txt
@@ -6,10 +7,10 @@ exec_root=`pwd`
 # pwd
 # echo HELLO
 
-# mkdir -p $bin/input/
+# mkdir -p $bin
 # cp input_0.png $bin/input/
 
-# cd $bin
+cd $bin
 
 # ls
 # ls ./input/

@@ -21,7 +21,7 @@ RUN pip install dlib imutils scipy pandas opencv-python tqdm pretrainedmodels im
 RUN pip install -U retinaface-pytorch
 RUN pip install gdown
 
-# this is the path that IPOL is connected to
+# this is the path that $bin of IPOL server is connected to
 ENV bin /workdir/bin
 RUN mkdir -p $bin
 workdir $bin
@@ -37,3 +37,6 @@ RUN gdown  -O weights/FFraw.tar 12sLyqBp0VFwdpA-oZLdIOkOTkz_ZnIhV
 RUN bash test_img.sh
 
 WORKDIR $bin
+
+# RUN groupadd -g 1000 ipol && useradd -m -u 1000 -g 1000 ipol -d $bin && chmod -R 777 $bin
+# USER ipol
