@@ -28,9 +28,13 @@ import cv2
 def main(args):
 
     model=Detector()
+    print("model")
     model=model.to(device)
+    print("device", device)
     cnn_sd=torch.load(args.weight_name, map_location=device)["model"]
+    print("load")
     model.load_state_dict(cnn_sd)
+    print("load")
     model.eval()
 
     print("load_state_dict done")
