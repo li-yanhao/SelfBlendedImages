@@ -23,7 +23,7 @@ import warnings
 import cv2
 
 
-warnings.filterwarnings('ignore')
+# warnings.filterwarnings('ignore')
 
 def main(args):
 
@@ -50,8 +50,7 @@ def main(args):
 
 
 if __name__=='__main__':
-    print("Hi python")
-    
+
     seed=1
     random.seed(seed)
     torch.manual_seed(seed)
@@ -67,5 +66,6 @@ if __name__=='__main__':
     parser.add_argument('-i',dest='input_image',type=str)
     args=parser.parse_args()
 
+    print("Hi python")
     main(args)
 
