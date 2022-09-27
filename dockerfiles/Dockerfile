@@ -43,7 +43,7 @@ RUN unzip retinaface_resnet50_2020-07-20-f168fae3c.zip -d weights/ && rm retinaf
 # RUN pwd
 # RUN ls
 # download model weights
-RUN bash test_img.sh
+# RUN bash test_img.sh
 
 WORKDIR $bin
 
