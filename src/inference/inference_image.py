@@ -24,25 +24,6 @@ import warnings
 import cv2
 
 
-# warnings.filterwarnings('ignore')
-from retinaface.predict_single import Model
-from collections import namedtuple
-model = namedtuple("model", ["url", "model"])
-models = {
-    "resnet50_2020-07-20": model(
-        url="https://github.com/ternaus/retinaface/releases/download/0.01/retinaface_resnet50_2020-07-20-f168fae3c.zip",  # noqa: E501 pylint: disable=C0301
-        model=Model,
-    )
-}
-from torch.utils import model_zoo
-def get_model(model_name: str,model_dir: str, max_size: int, device: str = "cpu") -> Model:
-    model = models[model_name].model(max_size=max_size, device=device)
-    state_dict = model_zoo.load_url(models[model_name].url, model_dir=model_dir, progress=True, map_location="cpu")
-
-    model.load_state_dict(state_dict)
-
-    return model
-
 def main(args):
     print("main")
     model=Detector()
