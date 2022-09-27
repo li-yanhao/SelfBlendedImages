@@ -37,7 +37,8 @@ RUN wget https://github.com/lukemelas/EfficientNet-PyTorch/releases/download/1.0
 RUN mv adv-efficientnet-b4-44fb3a87.pth weights/
 
 RUN wget https://github.com/ternaus/retinaface/releases/download/0.01/retinaface_resnet50_2020-07-20-f168fae3c.zip
-RUN mv retinaface_resnet50_2020-07-20-f168fae3c.zip weights/
+RUN unzip retinaface_resnet50_2020-07-20-f168fae3c.zip -d weights/ && rm retinaface_resnet50_2020-07-20-f168fae3c.zip
+
 
 # RUN pwd
 # RUN ls
