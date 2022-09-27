@@ -46,5 +46,5 @@ RUN bash test_img.sh
 
 WORKDIR $bin
 
-RUN groupadd -g 1000 ipol && useradd -m -u 1000 -g 1000 ipol -d $bin && chmod -R 777 $bin && chmod -R 777 /root/.cache/
+RUN groupadd -g 1000 ipol && useradd -m -u 1000 -g 1000 ipol -d $bin && chmod -R 777 $bin && chmod -R 777 /
 USER ipol
