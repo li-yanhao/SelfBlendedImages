@@ -33,11 +33,11 @@ RUN mkdir -p weights
 
 RUN gdown 12sLyqBp0VFwdpA-oZLdIOkOTkz_ZnIhV -O weights/FFraw.tar 
 
-# RUN wget https://github.com/lukemelas/EfficientNet-PyTorch/releases/download/1.0/adv-efficientnet-b4-44fb3a87.pth
-# RUN mv adv-efficientnet-b4-44fb3a87.pth weights/
+RUN wget https://github.com/lukemelas/EfficientNet-PyTorch/releases/download/1.0/adv-efficientnet-b4-44fb3a87.pth
+RUN mv adv-efficientnet-b4-44fb3a87.pth weights/
 
-# RUN wget https://github.com/ternaus/retinaface/releases/download/0.01/retinaface_resnet50_2020-07-20-f168fae3c.zip
-# RUN mv retinaface_resnet50_2020-07-20-f168fae3c.zip weights/
+RUN wget https://github.com/ternaus/retinaface/releases/download/0.01/retinaface_resnet50_2020-07-20-f168fae3c.zip
+RUN mv retinaface_resnet50_2020-07-20-f168fae3c.zip weights/
 
 # RUN pwd
 # RUN ls
@@ -46,5 +46,5 @@ RUN bash test_img.sh
 
 WORKDIR $bin
 
-RUN groupadd -g 1000 ipol && useradd -m -u 1000 -g 1000 ipol -d $bin && chmod -R 777 $bin && chmod -R 777 /
+RUN groupadd -g 1000 ipol && useradd -m -u 1000 -g 1000 ipol -d $bin && chmod -R 777 $bin
 USER ipol

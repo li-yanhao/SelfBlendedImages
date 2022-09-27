@@ -17,8 +17,8 @@ from model import Detector
 import argparse
 from datetime import datetime
 from tqdm import tqdm
-from retinaface.pre_trained_models import get_model
-# from pretrained_model import get_model
+# from retinaface.pre_trained_models import get_model
+from pretrained_model import get_model
 from preprocess import extract_face
 import warnings
 import cv2
@@ -26,7 +26,7 @@ import cv2
 
 def main(args):
     print("main")
-    model=Detector()
+    model=Detector(weights_path=args.efficient_weight)
     print("model")
     model=model.to(device)
     print("device", device)
@@ -41,7 +41,7 @@ def main(args):
     frame = cv2.imread(args.input_image)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    face_detector = get_model("resnet50_2020-07-20", max_size=max(frame.shape),device=device)
+    face_detector = get_model("resnet50_2020-07-20", weights_path=args.retinaface_weight, max_size=max(frame.shape),device=device)
     # face_detector = get_model("resnet50_2020-07-20", args.weight_dir, max_size=max(frame.shape),device=device)
     face_detector.eval()
 
@@ -70,6 +70,8 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('-w',dest='weight_name',type=str)
     parser.add_argument('-i',dest='input_image',type=str)
+    parser.add_argument('-e',dest='efficient_weight',type=str)
+    parser.add_argument('-r',dest='retinaface_weight',type=str)
     # parser.add_argument('-d',dest='weight_dir',type=str)
     args=parser.parse_args()
 
