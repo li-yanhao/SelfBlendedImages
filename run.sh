@@ -14,7 +14,7 @@ exec_root=`pwd`
 # cp input_0.png $bin/input/
 
 #### IPOL ####
-# cd $bin
+cd $bin
 ##############
 
 file=$1
