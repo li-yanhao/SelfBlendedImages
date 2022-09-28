@@ -72,7 +72,6 @@ if __name__=='__main__':
     parser.add_argument('-i',dest='input_image',type=str)
     parser.add_argument('-e',dest='efficient_weight',type=str)
     parser.add_argument('-r',dest='retinaface_weight',type=str)
-    # parser.add_argument('-d',dest='weight_dir',type=str)
     args=parser.parse_args()
 
     print("Hi python")

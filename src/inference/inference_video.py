@@ -16,21 +16,23 @@ from model import Detector
 import argparse
 from datetime import datetime
 from tqdm import tqdm
-from retinaface.pre_trained_models import get_model
+# from retinaface.pre_trained_models import get_model
+from pretrained_model import get_model
 from preprocess import extract_frames
 import warnings
 warnings.filterwarnings('ignore')
 
 def main(args):
 
-    model=Detector()
+    model=Detector(weights_path=args.efficient_weight)
     model=model.to(device)
     cnn_sd=torch.load(args.weight_name, map_location=device)["model"]
     # print(f"device = {device}")
     model.load_state_dict(cnn_sd)
     model.eval()
 
-    face_detector = get_model("resnet50_2020-07-20", max_size=2048,device=device)
+    # face_detector = get_model("resnet50_2020-07-20", max_size=2048,device=device)
+    face_detector = get_model("resnet50_2020-07-20", weights_path=args.retinaface_weight, max_size=2048,device=device)
     face_detector.eval()
 
     face_list,idx_list=extract_frames(args.input_video,args.n_frames,face_detector)
@@ -55,10 +57,6 @@ def main(args):
     print(f'fakeness: {pred:.4f}')
 
 
-
-
-
-
 if __name__=='__main__':
 
     seed=1
@@ -74,6 +72,8 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('-w',dest='weight_name',type=str)
     parser.add_argument('-i',dest='input_video',type=str)
+    parser.add_argument('-e',dest='efficient_weight',type=str)
+    parser.add_argument('-r',dest='retinaface_weight',type=str)
     parser.add_argument('-n',dest='n_frames',default=32,type=int)
     args=parser.parse_args()
 

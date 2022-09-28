@@ -13,22 +13,35 @@ exec_root=`pwd`
 # mkdir -p $bin
 # cp input_0.png $bin/input/
 
-cd $bin
+#### IPOL ####
+# cd $bin
+##############
 
-# ls
-# ls ./input/
+file=$1
+echo $file
 
-# pwd
-# ls
-
-# python src/inference/inference_image.py -w weights/FFraw.tar -i $exec_root/input_0.png
-    # >> $bin/stdout.txt
-    
-python src/inference/inference_image.py \
+if [[ $file == *.png ]]; then
+    python src/inference/inference_image.py \
     -w weights/FFraw.tar \
     -e weights/adv-efficientnet-b4-44fb3a87.pth \
     -r weights/retinaface_resnet50_2020-07-20.pth \
-    -i $exec_root/input_0.png
+    -i $file
+fi
+
+if [[ $file == *.mp4 ]]; then
+    python src/inference/inference_video.py \
+    -w weights/FFraw.tar \
+    -e weights/adv-efficientnet-b4-44fb3a87.pth \
+    -r weights/retinaface_resnet50_2020-07-20.pth \
+    -i $file
+fi
+
+
+
+
+
+
+
 
 # mv output.png $exec_root
 echo Successful!
