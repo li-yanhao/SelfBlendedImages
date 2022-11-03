@@ -25,8 +25,8 @@ import logging
 
 if os.path.isfile('/app/src/utils/library/bi_online_generation.py'):
 	sys.path.append('/app/src/utils/library/')
-	print('exist library')
 	exist_bi=True
+	print("using bi_online_generation.py")
 else:
 	exist_bi=False
 
