@@ -92,12 +92,23 @@ class SBI_Dataset(Dataset):
                     img_f, landmark, bbox, margin=False, crop_by_bbox=True, abs_coord=True, phase=self.phase)
 
                 img_r = img_r[y0_new:y1_new, x0_new:x1_new]
+                mask_f = mask_f[y0_new:y1_new, x0_new:x1_new]
 
                 img_f = cv2.resize(img_f, self.image_size, interpolation=cv2.INTER_LINEAR).astype('float32')/255
                 img_r = cv2.resize(img_r, self.image_size, interpolation=cv2.INTER_LINEAR).astype('float32')/255
+                mask_f = cv2.resize(mask_f, self.image_size, interpolation=cv2.INTER_LINEAR).astype('float32')/255
+
+                print("mask_f", mask_f)
+                print("img_f.shape", img_f.shape)
+                print("img_r.shape", img_r.shape)
+                print("mask_f.shape", mask_f.shape)
+                
+
 
                 img_f = img_f.transpose((2, 0, 1))
                 img_r = img_r.transpose((2, 0, 1))
+                mask_f = mask_f.transpose((2, 0, 1))
+
                 flag = False
             except Exception as e:
                 print(e)
