@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torchvision
-from torchvision import datasets,transforms,models,utils
+from torchvision import datasets, transforms, models, utils
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -26,11 +26,11 @@ import cv2
 
 def main(args):
     print("main")
-    model=Detector(weights_path=args.efficient_weight)
+    model = Detector(weights_path=args.efficient_weight)
     print("model")
-    model=model.to(device)
+    model = model.to(device)
     print("device", device)
-    cnn_sd=torch.load(args.weight_name, map_location=device)["model"]
+    cnn_sd = torch.load(args.weight_name, map_location=device)["model"]
     print("load")
     model.load_state_dict(cnn_sd)
     print("load")
@@ -41,23 +41,24 @@ def main(args):
     frame = cv2.imread(args.input_image)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    face_detector = get_model("resnet50_2020-07-20", weights_path=args.retinaface_weight, max_size=max(frame.shape),device=device)
+    face_detector = get_model("resnet50_2020-07-20", weights_path=args.retinaface_weight,
+                              max_size=max(frame.shape), device=device)
     # face_detector = get_model("resnet50_2020-07-20", args.weight_dir, max_size=max(frame.shape),device=device)
     face_detector.eval()
 
-    face_list=extract_face(frame,face_detector)
+    face_list = extract_face(frame, face_detector)
     print("face_list", face_list)
     with torch.no_grad():
-        img=torch.tensor(face_list).to(device).float()/255
+        img = torch.tensor(face_list).to(device).float()/255
         # torchvision.utils.save_image(img, f'test.png', nrow=8, normalize=False, range=(0, 1))
-        pred=model(img).softmax(1)[:,1].cpu().data.numpy().tolist()
+        pred = model(img).softmax(1)[:, 1].cpu().data.numpy().tolist()
 
     print(f'fakeness: {max(pred):.4f}')
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
 
-    seed=1
+    seed = 1
     random.seed(seed)
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -67,15 +68,14 @@ if __name__=='__main__':
 
     device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
 
-    parser=argparse.ArgumentParser()
-    parser.add_argument('-w',dest='weight_name',type=str)
-    parser.add_argument('-i',dest='input_image',type=str)
-    parser.add_argument('-e',dest='efficient_weight',type=str)
-    parser.add_argument('-r',dest='retinaface_weight',type=str)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-w', dest='weight_name', type=str)
+    parser.add_argument('-i', dest='input_image', type=str)
+    parser.add_argument('-e', dest='efficient_weight', type=str)
+    parser.add_argument('-r', dest='retinaface_weight', type=str)
     # parser.add_argument('-d',dest='weight_dir',type=str)
-    args=parser.parse_args()
+    args = parser.parse_args()
 
     print("Hi python")
     print("device", device)
     main(args)
-

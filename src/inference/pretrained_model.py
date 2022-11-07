@@ -18,7 +18,7 @@ def get_model(model_name: str, weights_path: str, max_size: int, device: str = "
     model = models[model_name].model(max_size=max_size, device=device)
     # state_dict = model_zoo.load_url(models[model_name].url, progress=True, map_location="cpu")
     state_dict = torch.load(weights_path)
-    # state_dict = 
+    # state_dict =
     model.load_state_dict(state_dict)
 
     return model
