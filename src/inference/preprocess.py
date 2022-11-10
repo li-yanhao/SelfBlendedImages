@@ -3,6 +3,7 @@ import cv2
 from PIL import Image
 import sys
 from tqdm import tqdm
+import os
 
 
 def extract_frames(filename, num_frames, model, image_size=(380, 380)):

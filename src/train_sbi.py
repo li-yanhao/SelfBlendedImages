@@ -73,22 +73,33 @@ def main(args):
     val_losses = []
     n_epoch = cfg['epoch']
     lr_scheduler = LinearDecayLR(model.optimizer, n_epoch, int(n_epoch/4*3))
-    last_loss = 99999
 
-    now = datetime.now()
-    save_path = 'output/{}_'.format(args.session_name)+now.strftime(os.path.splitext(
-        os.path.basename(args.config))[0])+'_'+now.strftime("%m_%d_%H_%M_%S")+'/'
-    os.mkdir(save_path)
-    os.mkdir(save_path+'weights/')
-    os.mkdir(save_path+'logs/')
+    if args.session == '':
+        now = datetime.now()
+        args.session = 'sbi_'+now.strftime(os.path.splitext(
+            os.path.basename(args.config))[0])+'_'+now.strftime("%m_%d_%H_%M_%S")
+    else:
+        pass
+    
+    if args.init_weight_name != '':
+        model_weight = torch.load(args.init_weight_name)["model"]
+        model.load_state_dict(model_weight)
+
+    save_path = 'output/' + args.session + '/'
+
+    
+    os.makedirs(save_path, exist_ok=True)
+    os.makedirs(save_path+'weights/', exist_ok=True)
+    os.makedirs(save_path+'logs/', exist_ok=True)
     logger = log(path=save_path+"logs/", file="losses.logs")
 
-    criterion = nn.CrossEntropyLoss()
+    # criterion = nn.CrossEntropyLoss()
+    criterion = F.mse_loss
 
     last_auc = 0
     last_val_auc = 0
     weight_dict = {}
-    n_weight = 5
+    n_weight = 2
     for epoch in range(n_epoch):
         np.random.seed(seed + epoch)
         train_loss = 0.
@@ -97,22 +108,29 @@ def main(args):
         for step, data in enumerate(tqdm(train_loader)):
             img = data['img'].to(device, non_blocking=True).float()
             target = data['label'].to(device, non_blocking=True).long()
-            output = model.training_step(img, target)
-            loss = criterion(output, target)
+            mask_blend = data['blend'].to(device, non_blocking=True).float()
+
+            output = model.training_step(img, mask_blend)
+            loss = criterion(output, mask_blend)
             loss_value = loss.item()
             iter_loss.append(loss_value)
             train_loss += loss_value
-            acc = compute_accuray(F.log_softmax(output, dim=1), target)
-            train_acc += acc
+            # acc = compute_accuray(F.log_softmax(output, dim=1), target)
+            # train_acc += acc
         lr_scheduler.step()
         train_losses.append(train_loss/len(train_loader))
-        train_accs.append(train_acc/len(train_loader))
+        # train_accs.append(train_acc/len(train_loader))
 
-        log_text = "Epoch {}/{} | train loss: {:.4f}, train acc: {:.4f}, ".format(
+        # log_text = "Epoch {}/{} | train loss: {:.4f}, train acc: {:.4f}, ".format(
+        #     epoch+1,
+        #     n_epoch,
+        #     train_loss/len(train_loader),
+        #     train_acc/len(train_loader),
+        # )
+        log_text = "Epoch {}/{} | train loss: {:.4f}, ".format(
             epoch+1,
             n_epoch,
             train_loss/len(train_loader),
-            train_acc/len(train_loader),
         )
 
         model.train(mode=False)
@@ -124,51 +142,60 @@ def main(args):
         for step, data in enumerate(tqdm(val_loader)):
             img = data['img'].to(device, non_blocking=True).float()
             target = data['label'].to(device, non_blocking=True).long()
+            mask_blend = data['blend'].to(device, non_blocking=True).float()
+
+            # print("mask_blend.shape:", mask_blend.shape)
 
             with torch.no_grad():
                 output = model(img)
-                loss = criterion(output, target)
+                loss = criterion(output, mask_blend)
 
             loss_value = loss.item()
             iter_loss.append(loss_value)
             val_loss += loss_value
-            acc = compute_accuray(F.log_softmax(output, dim=1), target)
-            val_acc += acc
-            output_dict += output.softmax(1)[:, 1].cpu().data.numpy().tolist()
-            target_dict += target.cpu().data.numpy().tolist()
+            # acc = compute_accuray(F.log_softmax(output, dim=1), target)
+            # val_acc += acc
+            # output_dict += output.softmax(1)[:, 1].cpu().data.numpy().tolist()
+            # target_dict += target.cpu().data.numpy().tolist()
         val_losses.append(val_loss/len(val_loader))
-        val_accs.append(val_acc/len(val_loader))
-        val_auc = roc_auc_score(target_dict, output_dict)
-        log_text += "val loss: {:.4f}, val acc: {:.4f}, val auc: {:.4f}".format(
-            val_loss/len(val_loader),
-            val_acc/len(val_loader),
-            val_auc
+        # val_accs.append(val_acc/len(val_loader))
+        # val_auc = roc_auc_score(target_dict, output_dict)
+        # log_text += "val loss: {:.4f}, val acc: {:.4f}, val auc: {:.4f}".format(
+        #     val_loss/len(val_loader)
+        #     val_acc/len(val_loader),
+        #     val_auc
+        # )
+        val_loss_epoch = val_loss/len(val_loader)
+
+        log_text += "val loss: {:.4f}".format(
+            val_loss_epoch
         )
 
+
         if len(weight_dict) < n_weight:
-            save_model_path = os.path.join(save_path+'weights/', "{}_{:.4f}_val.tar".format(epoch+1, val_auc))
-            weight_dict[save_model_path] = val_auc
+            save_model_path = os.path.join(save_path+'weights/', "{}_{:.4f}_loss.tar".format(epoch+1, val_loss_epoch))
+            weight_dict[save_model_path] = val_loss_epoch
             torch.save({
                 "model": model.state_dict(),
                 "optimizer": model.optimizer.state_dict(),
                 "epoch": epoch
             }, save_model_path)
-            last_val_auc = min([weight_dict[k] for k in weight_dict])
+            last_val_loss = max([weight_dict[k] for k in weight_dict])
 
-        elif val_auc >= last_val_auc:
-            save_model_path = os.path.join(save_path+'weights/', "{}_{:.4f}_val.tar".format(epoch+1, val_auc))
+        elif val_loss_epoch <= last_val_loss:
+            save_model_path = os.path.join(save_path+'weights/', "{}_{:.4f}_val.tar".format(epoch+1, val_loss_epoch))
             for k in weight_dict:
-                if weight_dict[k] == last_val_auc:
+                if weight_dict[k] == last_val_loss:
                     del weight_dict[k]
                     os.remove(k)
-                    weight_dict[save_model_path] = val_auc
+                    weight_dict[save_model_path] = val_loss_epoch
                     break
             torch.save({
                 "model": model.state_dict(),
                 "optimizer": model.optimizer.state_dict(),
                 "epoch": epoch
             }, save_model_path)
-            last_val_auc = min([weight_dict[k] for k in weight_dict])
+            last_val_loss = max([weight_dict[k] for k in weight_dict])
 
         logger.info(log_text)
 
@@ -177,6 +204,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument(dest='config')
-    parser.add_argument('-n', dest='session_name')
+    parser.add_argument('-n', dest='session', default='')
+    parser.add_argument('-i', dest='init_weight_name', default='')
     args = parser.parse_args()
     main(args)

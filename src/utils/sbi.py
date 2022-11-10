@@ -96,25 +96,31 @@ class SBI_Dataset(Dataset):
 
                 img_f = cv2.resize(img_f, self.image_size, interpolation=cv2.INTER_LINEAR).astype('float32')/255
                 img_r = cv2.resize(img_r, self.image_size, interpolation=cv2.INTER_LINEAR).astype('float32')/255
-                mask_f = cv2.resize(mask_f, self.image_size, interpolation=cv2.INTER_LINEAR).astype('float32')/255
+                mask_f = cv2.resize(mask_f, self.image_size, interpolation=cv2.INTER_LINEAR).astype('float32')
 
-                print("mask_f", mask_f)
-                print("img_f.shape", img_f.shape)
-                print("img_r.shape", img_r.shape)
-                print("mask_f.shape", mask_f.shape)
+                # print("mask_f", mask_f)
+                # print("img_f.shape", img_f.shape)
+                # print("img_r.shape", img_r.shape)
+                # print("mask_f.shape", mask_f.shape)
+
                 
+                # like Face-X-Ray, compute the blending mask
+                mask_blend = 4 * mask_f * (1 - mask_f)
+                mask_blend = mask_blend[None, ...]
+
+                # debug
+                # cv2.imwrite(f"mask_blend_{idx}.png", (mask_blend*255).astype(np.uint8))
 
 
                 img_f = img_f.transpose((2, 0, 1))
                 img_r = img_r.transpose((2, 0, 1))
-                mask_f = mask_f.transpose((2, 0, 1))
 
                 flag = False
             except Exception as e:
                 print(e)
                 idx = torch.randint(low=0, high=len(self), size=(1,)).item()
 
-        return img_f, img_r
+        return img_f, img_r, mask_blend
 
     def get_source_transforms(self):
         return alb.Compose([
@@ -187,7 +193,11 @@ class SBI_Dataset(Dataset):
 
         source, mask = self.randaffine(source, mask)
 
-        img_blended, mask = B.dynamic_blend(source, img, mask)
+
+        # img_blended, mask = B.dynamic_blend(source, img, mask)
+        # yanhao: use alpha blend
+        img_blended, mask = B.alpha_blend(source, img, mask)
+
         img_blended = img_blended.astype(np.uint8)
         img = img.astype(np.uint8)
 
@@ -264,10 +274,14 @@ class SBI_Dataset(Dataset):
         return img, mask, landmark_new, bbox_new
 
     def collate_fn(self, batch):
-        img_f, img_r = zip(*batch)
+        img_f, img_r, mask_blend = zip(*batch)
         data = {}
         data['img'] = torch.cat([torch.tensor(img_r).float(), torch.tensor(img_f).float()], 0)
         data['label'] = torch.tensor([0]*len(img_r)+[1]*len(img_f))
+        
+        mask_no_blend = np.zeros_like(mask_blend)
+        data['blend'] = torch.cat([torch.tensor(mask_no_blend).float(), torch.tensor(mask_blend).float()], 0)
+
         return data
 
     def worker_init_fn(self, worker_id):
