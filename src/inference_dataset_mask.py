@@ -64,8 +64,8 @@ def main(args):
         filename = video_list[idx_vid]
 
         # skip real videos for the moment
-        if target_list[idx_vid] == 0:
-            continue
+        # if target_list[idx_vid] == 0:
+        #     continue
 
         try:
             face_list, idx_list = extract_frames(filename, args.n_frames, face_detector, image_size=(384, 384))

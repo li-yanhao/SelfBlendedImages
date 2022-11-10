@@ -107,11 +107,12 @@ def main(args):
         model.train(mode=True)
         for step, data in enumerate(tqdm(train_loader)):
             img = data['img'].to(device, non_blocking=True).float()
-            target = data['label'].to(device, non_blocking=True).long()
+            target_class = data['label'].to(device, non_blocking=True).long()
             mask_blend = data['blend'].to(device, non_blocking=True).float()
 
-            output = model.training_step(img, mask_blend)
-            loss = criterion(output, mask_blend)
+            output_mask, output_class = model.training_step(img, mask_blend, target_class)
+            loss = F.mse_loss(output, mask_blend) + 
+
             loss_value = loss.item()
             iter_loss.append(loss_value)
             train_loss += loss_value

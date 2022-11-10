@@ -49,8 +49,8 @@ class Detector(nn.Module):
             activation='sigmoid',      # activation function, default is None
             classes=1,                 # define number of output labels
         )
-        # self.net = smp.DeepLabV3Plus(encoder_name="efficientnet-b4", encoder_weights="imagenet", in_channels=3, classes=1, aux_params=aux_params)
-        self.net = smp.DeepLabV3Plus(encoder_name="efficientnet-b4", encoder_weights="imagenet", in_channels=3, classes=1)
+        self.net = smp.DeepLabV3Plus(encoder_name="efficientnet-b4", encoder_weights="imagenet", in_channels=3, classes=1, aux_params=aux_params)
+        # self.net = smp.DeepLabV3Plus(encoder_name="efficientnet-b4", encoder_weights="imagenet", in_channels=3, classes=1)
 
         # self.net = EfficientNet.from_pretrained(
         #     "efficientnet-b4", weights_path="weights/adv-efficientnet-b4-44fb3a87.pth", advprop=True, num_classes=2)
@@ -61,22 +61,25 @@ class Detector(nn.Module):
     def forward(self, x):
         # x = self.net(x)
         # output_mask, output_target = self.net(x)
-        output_mask = self.net(x)
+        output_mask, output_class = self.net(x)
 
-        return output_mask
+        return output_mask, output_class
 
-    def training_step(self, x, target_mask):
+    def training_step(self, x, target_mask, target_class):
         for i in range(2):
-            output_mask = self(x)
+            output_mask, output_class = self(x)
             if i == 0:
                 mask_first = output_mask
+                class_first = output_class
             loss_mask = F.mse_loss(output_mask, target_mask)
-            
+            loss_class = nn.CrossEntropyLoss()(output_class, target_class)
+            loss = loss_mask * 100 + loss_class
+
             self.optimizer.zero_grad()
-            loss_mask.backward()
+            loss.backward()
             if i == 0:
                 self.optimizer.first_step(zero_grad=True)
             else:
                 self.optimizer.second_step(zero_grad=True)
 
-        return mask_first
+        return mask_first, class_first
