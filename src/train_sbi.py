@@ -19,9 +19,12 @@ from model import Detector
 
 
 def compute_accuray(pred, true):
-    pred_idx = pred.argmax(dim=1).cpu().data.numpy()
-    tmp = pred_idx == true.cpu().numpy()
-    return sum(tmp)/len(pred_idx)
+    pred = pred.cpu().detach().numpy()
+    pred[pred > 0.5] = 1
+    pred[pred <= 0.5] = 0
+    
+    tmp = pred == true.cpu().numpy()
+    return sum(tmp)/len(pred)
 
 
 def main(args):
@@ -107,32 +110,36 @@ def main(args):
         model.train(mode=True)
         for step, data in enumerate(tqdm(train_loader)):
             img = data['img'].to(device, non_blocking=True).float()
-            target_class = data['label'].to(device, non_blocking=True).long()
-            mask_blend = data['blend'].to(device, non_blocking=True).float()
+            target_class = data['label'].to(device, non_blocking=True).float()
+            target_mask = data['blend'].to(device, non_blocking=True).float()
 
-            output_mask, output_class = model.training_step(img, mask_blend, target_class)
-            loss = F.mse_loss(output, mask_blend) + 
+            output_mask, output_class = model.training_step(img, target_mask, target_class)
+
+            loss = Detector.compute_loss(output_mask, target_mask, output_class, target_class)
 
             loss_value = loss.item()
             iter_loss.append(loss_value)
             train_loss += loss_value
-            # acc = compute_accuray(F.log_softmax(output, dim=1), target)
-            # train_acc += acc
+            acc = compute_accuray(output_class, target_class)
+            print(f"acc={acc:.2f}")
+            train_acc += acc
         lr_scheduler.step()
         train_losses.append(train_loss/len(train_loader))
         # train_accs.append(train_acc/len(train_loader))
 
-        # log_text = "Epoch {}/{} | train loss: {:.4f}, train acc: {:.4f}, ".format(
-        #     epoch+1,
-        #     n_epoch,
-        #     train_loss/len(train_loader),
-        #     train_acc/len(train_loader),
-        # )
-        log_text = "Epoch {}/{} | train loss: {:.4f}, ".format(
+        log_text = "Epoch {}/{} | train loss: {:.4f}, train acc: {:.4f}, ".format(
             epoch+1,
             n_epoch,
             train_loss/len(train_loader),
+            train_acc/len(train_loader),
         )
+
+
+        # log_text = "Epoch {}/{} | train loss: {:.4f}, ".format(
+        #     epoch+1,
+        #     n_epoch,
+        #     train_loss/len(train_loader),
+        # )
 
         model.train(mode=False)
         val_loss = 0.
@@ -142,35 +149,37 @@ def main(args):
         np.random.seed(seed)
         for step, data in enumerate(tqdm(val_loader)):
             img = data['img'].to(device, non_blocking=True).float()
-            target = data['label'].to(device, non_blocking=True).long()
-            mask_blend = data['blend'].to(device, non_blocking=True).float()
+            target_class = data['label'].to(device, non_blocking=True).float()
+            target_mask = data['blend'].to(device, non_blocking=True).float()
 
-            # print("mask_blend.shape:", mask_blend.shape)
+            # print("target_mask.shape:", target_mask.shape)
 
             with torch.no_grad():
-                output = model(img)
-                loss = criterion(output, mask_blend)
+                output_mask, output_class = model(img)
+                loss = Detector.compute_loss(output_mask, target_mask, output_class, target_class)
 
             loss_value = loss.item()
             iter_loss.append(loss_value)
             val_loss += loss_value
-            # acc = compute_accuray(F.log_softmax(output, dim=1), target)
-            # val_acc += acc
-            # output_dict += output.softmax(1)[:, 1].cpu().data.numpy().tolist()
-            # target_dict += target.cpu().data.numpy().tolist()
+            acc = compute_accuray(output_class, target_class)
+            print(f"val_acc={acc:.2f}")
+            val_acc += acc
+            output_dict += output_class.cpu().data.numpy().tolist()
+            target_dict += target_class.cpu().data.numpy().tolist()
         val_losses.append(val_loss/len(val_loader))
-        # val_accs.append(val_acc/len(val_loader))
-        # val_auc = roc_auc_score(target_dict, output_dict)
-        # log_text += "val loss: {:.4f}, val acc: {:.4f}, val auc: {:.4f}".format(
-        #     val_loss/len(val_loader)
-        #     val_acc/len(val_loader),
-        #     val_auc
-        # )
-        val_loss_epoch = val_loss/len(val_loader)
+        val_accs.append(val_acc/len(val_loader))
+        val_auc = roc_auc_score(target_dict, output_dict)
 
-        log_text += "val loss: {:.4f}".format(
-            val_loss_epoch
+        log_text += "val loss: {:.4f}, val acc: {:.4f}, val auc: {:.4f}".format(
+            val_loss/len(val_loader),
+            val_acc/len(val_loader),
+            val_auc
         )
+
+        val_loss_epoch = val_loss/len(val_loader)
+        # log_text += "val loss: {:.4f}".format(
+        #     val_loss_epoch
+        # )
 
 
         if len(weight_dict) < n_weight:

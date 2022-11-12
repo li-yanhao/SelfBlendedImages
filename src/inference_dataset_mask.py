@@ -60,8 +60,11 @@ def main(args):
     output_folder = "output_mask_blend"
     os.makedirs(output_folder, exist_ok=True)
 
+    output_list = []
     for idx_vid in tqdm(range(len(video_list))):
         filename = video_list[idx_vid]
+
+        print(f"Processing {filename}")
 
         # skip real videos for the moment
         # if target_list[idx_vid] == 0:
@@ -72,33 +75,58 @@ def main(args):
 
             with torch.no_grad():
                 img = torch.tensor(face_list).to(device).float()/255
-                masks_blend = model(img).cpu().detach().numpy()
+                output_mask, output_fakenesses = model(img)
+                output_mask = output_mask.cpu().detach().numpy()
+                output_fakenesses = output_fakenesses.cpu().detach().numpy()
 
-                print("masks_blend.shape:", masks_blend.shape)
+                print("output_mask.shape:", output_mask.shape)
+                print("output_fakenesses.shape:", output_fakenesses.shape)
             
 
             label = "real" if target_list[idx_vid] == 0 else "fake"
             item_folder = os.path.join(output_folder, os.path.basename(filename) + f".{label}")
             os.makedirs(item_folder, exist_ok=True)
 
+            # store the blending mask
             for idx_face in range(len(face_list)):
                 face = face_list[idx_face]
                 face = np.transpose(face, (1, 2, 0))
                 face = np.uint8(face)
                 face = cv2.cvtColor(face, cv2.COLOR_RGB2BGR)
                 
-                mask = masks_blend[idx_face, 0]
+                mask = output_mask[idx_face, 0]
+                # print("mask: min,max = ", mask.min(), mask.max())
+                
                 mask = np.uint8(mask * 255)
                 
                 cv2.imwrite(os.path.join(item_folder, f"face_{idx_face}.png"), face)
                 cv2.imwrite(os.path.join(item_folder, f"mask_{idx_face}.png"), mask)
 
+            # store the prediction of fakeness
+            pred_list = []
+            idx_img = -1
+            print("output_fakenesses: ", output_fakenesses)
+            for i in range(len(output_fakenesses)):
+                if idx_list[i] != idx_img:
+                    pred_list.append([])
+                    idx_img = idx_list[i]
+                pred_list[-1].append(output_fakenesses[i])
+            pred_res = np.zeros(len(pred_list))
+            for i in range(len(pred_res)):
+                pred_res[i] = max(pred_list[i])
+            pred = pred_res.mean()
+            print(f"successful prediction: pred={pred}")
 
         except Exception as e:
             print(e)
-            # pred = 0.5
-        # output_list.append(pred)
+            pred = 0.5
+        output_list.append(pred)
 
+        print(f"label={target_list[idx_vid]}, pred={pred:.2f}")
+
+
+    auc = roc_auc_score(target_list, output_list)
+    print(f'{args.dataset}| AUC: {auc:.4f}')
 
     result_file.close()
 
