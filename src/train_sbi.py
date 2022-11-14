@@ -89,6 +89,7 @@ def main(args):
         model.load_state_dict(model_weight)
 
     save_path = 'output/' + args.session + '/'
+    print("Weights and logs are saved in ", save_path)
 
     os.makedirs(save_path, exist_ok=True)
     os.makedirs(save_path+'weights/', exist_ok=True)
@@ -96,7 +97,7 @@ def main(args):
     logger = log(path=save_path+"logs/", file="losses.logs")
 
     # criterion = nn.CrossEntropyLoss()
-    criterion = F.mse_loss
+    # criterion = F.mse_loss
 
     last_auc = 0
     last_val_auc = 0
