@@ -69,7 +69,7 @@ class Detector(nn.Module):
         # output_mask, output_target = self.net(x)
         output_mask, output_class = self.net(x)
 
-        print("output_class:", output_class)
+        # print("output_class:", output_class)
 
         return output_mask, output_class.squeeze()
 
@@ -101,7 +101,9 @@ class Detector(nn.Module):
     @staticmethod
     def compute_loss(output_mask, target_mask, output_class, target_class):
 
-        loss_mask = nn.BCELoss()(output_mask, target_mask)
-        loss_class = nn.BCELoss()(output_class, target_class)
+        # loss_mask = nn.BCELoss()(output_mask, target_mask)
+        # loss_class = nn.BCELoss()(output_class, target_class)
 
-        return loss_mask * 100 + loss_class 
+        # return loss_mask * 100 + loss_class 
+
+        return nn.BCELoss()(output_class, target_class)

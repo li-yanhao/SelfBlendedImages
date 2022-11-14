@@ -124,7 +124,8 @@ def main(args):
 
         print(f"label={target_list[idx_vid]}, pred={pred:.2f}")
 
-
+    print("target_list: ", target_list)
+    print("output_list: ", output_list)
     auc = roc_auc_score(target_list, output_list)
     print(f'{args.dataset}| AUC: {auc:.4f}')
 

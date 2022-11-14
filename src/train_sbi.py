@@ -22,7 +22,7 @@ def compute_accuray(pred, true):
     pred = pred.cpu().detach().numpy()
     pred[pred > 0.5] = 1
     pred[pred <= 0.5] = 0
-    
+
     tmp = pred == true.cpu().numpy()
     return sum(tmp)/len(pred)
 
@@ -83,14 +83,13 @@ def main(args):
             os.path.basename(args.config))[0])+'_'+now.strftime("%m_%d_%H_%M_%S")
     else:
         pass
-    
+
     if args.init_weight_name != '':
         model_weight = torch.load(args.init_weight_name)["model"]
         model.load_state_dict(model_weight)
 
     save_path = 'output/' + args.session + '/'
 
-    
     os.makedirs(save_path, exist_ok=True)
     os.makedirs(save_path+'weights/', exist_ok=True)
     os.makedirs(save_path+'logs/', exist_ok=True)
@@ -133,7 +132,6 @@ def main(args):
             train_loss/len(train_loader),
             train_acc/len(train_loader),
         )
-
 
         # log_text = "Epoch {}/{} | train loss: {:.4f}, ".format(
         #     epoch+1,
@@ -181,7 +179,6 @@ def main(args):
         #     val_loss_epoch
         # )
 
-
         if len(weight_dict) < n_weight:
             save_model_path = os.path.join(save_path+'weights/', "{}_{:.4f}_loss.tar".format(epoch+1, val_loss_epoch))
             weight_dict[save_model_path] = val_loss_epoch
@@ -206,6 +203,14 @@ def main(args):
                 "epoch": epoch
             }, save_model_path)
             last_val_loss = max([weight_dict[k] for k in weight_dict])
+        
+        # Always save the latest model
+        save_model_path = os.path.join(save_path+'weights/', "latest_val.tar")
+        torch.save({
+            "model": model.state_dict(),
+            "optimizer": model.optimizer.state_dict(),
+            "epoch": epoch
+        }, save_model_path)
 
         logger.info(log_text)
 

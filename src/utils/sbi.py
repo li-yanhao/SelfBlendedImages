@@ -21,9 +21,10 @@ import albumentations as alb
 import warnings
 warnings.filterwarnings('ignore')
 
+curr_dir = os.path.dirname(__file__)
 
-if os.path.isfile('/app/src/utils/library/bi_online_generation.py'):
-    sys.path.append('/app/src/utils/library/')
+if os.path.isfile(os.path.join(curr_dir, 'library/bi_online_generation.py')):
+    sys.path.append(os.path.join(curr_dir, 'library'))
     exist_bi = True
     print("using bi_online_generation.py")
 else:
@@ -193,8 +194,9 @@ class SBI_Dataset(Dataset):
 
         source, mask = self.randaffine(source, mask)
 
-
+        # official: use dynamic_blend
         # img_blended, mask = B.dynamic_blend(source, img, mask)
+
         # yanhao: use alpha blend
         img_blended, mask = B.alpha_blend(source, img, mask)
 
