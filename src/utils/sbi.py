@@ -32,7 +32,7 @@ else:
 
 
 class SBI_Dataset(Dataset):
-    def __init__(self, phase='train', image_size=224, n_frames=8):
+    def __init__(self, phase='train', image_size=224, n_frames=8, fake_ratio=0.5):
 
         assert phase in ['train', 'val', 'test']
 
@@ -54,6 +54,10 @@ class SBI_Dataset(Dataset):
 
         self.transforms = self.get_transforms()
         self.source_transforms = self.get_source_transforms()
+
+        assert fake_ratio <= 0.5
+        self.fake_ratio = fake_ratio
+        
 
     def __len__(self):
         return len(self.image_list)
@@ -86,8 +90,8 @@ class SBI_Dataset(Dataset):
 
                 if self.phase == 'train':
                     transformed = self.transforms(image=img_f.astype('uint8'), image1=img_r.astype('uint8'))
-                    img_f = transformed['image']
-                    img_r = transformed['image1']
+                    img_f = self.transforms(image=img_f.astype('uint8'))['image']
+                    img_r = self.transforms(image=img_r.astype('uint8'))['image']
 
                 img_f, _, __, ___, y0_new, y1_new, x0_new, x1_new = crop_face(
                     img_f, landmark, bbox, margin=False, crop_by_bbox=True, abs_coord=True, phase=self.phase)
@@ -121,7 +125,27 @@ class SBI_Dataset(Dataset):
                 print(e)
                 idx = torch.randint(low=0, high=len(self), size=(1,)).item()
 
-        return img_f, img_r, mask_blend
+        img_r_all = [img_r]
+        idx_others = np.random.choice(len(self.image_list)-1, int(1/self.fake_ratio) - 2, replace=False)
+        for idx_o in idx_others:
+            idx_o = (idx_o + 1 + idx) % len(self.image_list)
+            filename = self.image_list[idx_o]
+            img_o = np.array(Image.open(filename))
+            if self.phase == 'train':
+                img_o = self.transforms(image=img_o.astype('uint8'))['image']
+                #  to debug
+
+            img_o = cv2.resize(img_o, self.image_size, interpolation=cv2.INTER_LINEAR).astype('float32')/255
+            img_o = img_o.transpose((2, 0, 1))
+            img_r_all.append(img_o)
+
+        img_r_all = np.array(img_r_all)
+        print("img_r_all.shape:", img_r_all.shape)
+
+        # img_r_all = n, C, H, W
+        # img_f: C, H, W
+        # mask_blend: 1, H, W
+        return img_f, img_r_all, mask_blend
 
     def get_source_transforms(self):
         return alb.Compose([
@@ -146,10 +170,10 @@ class SBI_Dataset(Dataset):
             alb.HueSaturationValue(hue_shift_limit=(-0.3, 0.3), sat_shift_limit=(-0.3, 0.3),
                                    val_shift_limit=(-0.3, 0.3), p=0.3),
             alb.RandomBrightnessContrast(brightness_limit=(-0.3, 0.3), contrast_limit=(-0.3, 0.3), p=0.3),
-            alb.ImageCompression(quality_lower=40, quality_upper=100, p=0.5),
+            alb.ImageCompression(quality_lower=25, quality_upper=100, p=0.9),
 
         ],
-            additional_targets={f'image1': 'image'},
+            # additional_targets={f'image1': 'image'},
             p=1.)
 
     def randaffine(self, img, mask):
@@ -277,11 +301,19 @@ class SBI_Dataset(Dataset):
 
     def collate_fn(self, batch):
         img_f, img_r, mask_blend = zip(*batch)
+        # img_f: B, C, H, W
+        # img_r: B, n, C, H, W
+        # mask_blend: B, 1, H, W
+
+        img_r = np.array(img_r)
+        B, n, C, H, W = img_r.shape
+        img_r = img_r.reshape(-1, C, H, W)
+        
         data = {}
         data['img'] = torch.cat([torch.tensor(img_r).float(), torch.tensor(img_f).float()], 0)
         data['label'] = torch.tensor([0]*len(img_r)+[1]*len(img_f))
         
-        mask_no_blend = np.zeros_like(mask_blend)
+        mask_no_blend = np.zeros((n*B, 1, H, W))
         data['blend'] = torch.cat([torch.tensor(mask_no_blend).float(), torch.tensor(mask_blend).float()], 0)
 
         return data

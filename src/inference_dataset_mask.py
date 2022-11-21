@@ -56,7 +56,6 @@ def main(args):
     else:
         NotImplementedError
 
-    
     output_folder = "output_mask_blend"
     os.makedirs(output_folder, exist_ok=True)
 
@@ -114,22 +113,60 @@ def main(args):
             pred_res = np.zeros(len(pred_list))
             for i in range(len(pred_res)):
                 pred_res[i] = max(pred_list[i])
-            pred = pred_res.mean()
-            print(f"successful prediction: pred={pred}")
+            # pred = pred_res.mean()
+            # print(f"successful prediction: pred={pred}")
 
         except Exception as e:
             print(e)
-            pred = 0.5
-        output_list.append(pred)
+            pred_res = np.ones(args.n_frames) * 0.5
+            # pred = 0.5
+        output_list.append(pred_res)
 
-        print(f"label={target_list[idx_vid]}, pred={pred:.2f}")
+        print(f"label={target_list[idx_vid]}, pred={pred_res.mean():.2f}")
+    
+    
+    
+    target_img_list, output_img_list = extend_framewise_list(target_list, output_list)
+    image_auc = roc_auc_score(target_img_list, output_img_list)
+    print("target_img_list: ", target_img_list)
+    print("output_img_list: ", output_img_list)
+    print(f'{args.dataset}| Image-wise AUC: {image_auc:.4f}')
 
-    print("target_list: ", target_list)
-    print("output_list: ", output_list)
-    auc = roc_auc_score(target_list, output_list)
-    print(f'{args.dataset}| AUC: {auc:.4f}')
+    output_video_list = [preds.mean() for preds in output_list]
+    video_auc = roc_auc_score(target_list, output_video_list)
+    print("target_video_list: ", target_list)
+    print("output_video_list: ", output_video_list)
+    print(f'{args.dataset}| Video-wise AUC: {video_auc:.4f}')
 
     result_file.close()
+
+
+
+def extend_framewise_list(target_list, output_list):
+    """
+    Params
+    ------
+        target_list: a list of N integers in {0, 1}
+        output_list: a list of N arrays, each array stores the frame-wise predictions
+    
+    Return
+    ------
+        target_img_list: extend video labels to frame labels
+        output_img_list: expanded frame predictions
+    """
+    assert len(target_list) == len(output_list)
+
+    sizes_of_vectors = [len(v) for v in output_list]
+
+    target_img_list = []
+    output_img_list = []
+    for i in range(len(target_list)):
+        label = target_list[i]
+        size = sizes_of_vectors[i]
+        target_img_list += [label] * size
+        output_img_list += list(output_list[i])
+
+    return target_img_list, output_img_list
 
 
 if __name__ == '__main__':
@@ -149,7 +186,7 @@ if __name__ == '__main__':
     parser.add_argument('-w', dest='weight_name', type=str)
 
     parser.add_argument('-d', dest='dataset', type=str)
-    parser.add_argument('-n', dest='n_frames', default=32, type=int)
+    parser.add_argument('-n', dest='n_frames', default=64, type=int)
     args = parser.parse_args()
 
     ROOT = os.path.dirname(os.path.realpath(__file__))

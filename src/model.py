@@ -45,7 +45,7 @@ class Detector(nn.Module):
         
         aux_params=dict(
             pooling='avg',             # one of 'avg', 'max'
-            dropout=0.5,               # dropout ratio, default is None
+            dropout=None,               # dropout ratio, default is None
             activation='sigmoid',      # activation function, default is None
             classes=1,                 # define number of output labels
         )
@@ -101,9 +101,9 @@ class Detector(nn.Module):
     @staticmethod
     def compute_loss(output_mask, target_mask, output_class, target_class):
 
-        # loss_mask = nn.BCELoss()(output_mask, target_mask)
-        # loss_class = nn.BCELoss()(output_class, target_class)
+        loss_mask = nn.BCELoss()(output_mask, target_mask)
+        loss_class = nn.BCELoss()(output_class, target_class)
 
-        # return loss_mask * 100 + loss_class 
+        return loss_mask * 100 + loss_class 
 
-        return nn.BCELoss()(output_class, target_class)
+        # return nn.BCELoss()(output_class, target_class)

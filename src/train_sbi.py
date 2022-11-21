@@ -42,7 +42,7 @@ def main(args):
 
     image_size = cfg['image_size']
     batch_size = cfg['batch_size']
-    train_dataset = SBI_Dataset(phase='train', image_size=image_size)
+    train_dataset = SBI_Dataset(phase='train', image_size=image_size, fake_ratio=args.fake_ratio)
     val_dataset = SBI_Dataset(phase='val', image_size=image_size)
 
     train_loader = torch.utils.data.DataLoader(train_dataset,
@@ -222,5 +222,6 @@ if __name__ == '__main__':
     parser.add_argument(dest='config')
     parser.add_argument('-n', dest='session', default='')
     parser.add_argument('-i', dest='init_weight_name', default='')
+    parser.add_argument('-r', type=float, dest='fake_ratio', default=0.2)
     args = parser.parse_args()
     main(args)
